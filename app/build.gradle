@@ -17,6 +17,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    dataBinding{
+        enabled=true;
+    }
 }
 
 dependencies {
@@ -33,6 +37,10 @@ dependencies {
 
     // RxCamera
     compile "com.ragnarok.rxcamera:lib:$rootProject.rxCameraVersion"
+
+    // RxBluetooth
+
+    compile 'com.github.ivbaranov:rxbluetooth:0.1.6'
 
 
 }

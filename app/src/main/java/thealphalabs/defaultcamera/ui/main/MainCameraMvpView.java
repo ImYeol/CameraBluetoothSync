@@ -11,4 +11,8 @@ public interface MainCameraMvpView extends MvpView {
     void openCamera();
 
     boolean checkCamera();
+
+    void showLog(String s);
+
+    void bindBluetoothService();
 }

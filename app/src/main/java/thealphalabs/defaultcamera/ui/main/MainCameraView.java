@@ -1,12 +1,15 @@
 package thealphalabs.defaultcamera.ui.main;
 
+import android.Manifest;
 import android.content.pm.PackageManager;
+import android.databinding.DataBindingUtil;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-import android.widget.Toast;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 
 import com.ragnarok.rxcamera.RxCamera;
 import com.ragnarok.rxcamera.config.RxCameraConfig;
@@ -16,27 +19,45 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
 import thealphalabs.defaultcamera.R;
+import thealphalabs.defaultcamera.data.AppDataManager;
+import thealphalabs.defaultcamera.databinding.ActivityMainCameraViewBinding;
+import thealphalabs.defaultcamera.ui.CameraApp;
 import thealphalabs.defaultcamera.ui.base.BaseActivity;
+
+import static android.R.attr.keycode;
 
 public class MainCameraView extends BaseActivity implements MainCameraMvpView {
 
+    public static final String TAG = MainCameraView.class.getSimpleName();
 
     private RxCamera camera;
+    private MainCameraMvpPresenter<MainCameraMvpView> mPresenter;
+    private static final String[] REQUEST_PERMISSIONS = new String[] {
+            Manifest.permission.CAMERA,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+
+    private static final int REQUEST_PERMISSION_CODE = 233;
+
+    private ActivityMainCameraViewBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main_camera_view);
+        setUp();
+        bindAndAttach();
     }
 
     @Override
     protected void setUp() {
+        mPresenter=new MainCameraPresenter<MainCameraMvpView>(AppDataManager.getInstance());
 
     }
 
     @Override
     protected void bindAndAttach() {
-
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main_camera_view);
+        mPresenter.onAttach(this);
     }
 
 
@@ -50,6 +71,27 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
             }
         }
         return true;
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keycode == KeyEvent.KEYCODE_DPAD_DOWN){
+
+        }
+        else if(keycode == KeyEvent.KEYCODE_DPAD_UP){
+            mPresenter.takePicture(camera);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if(event.getAction() == MotionEvent.ACTION_DOWN) {
+            mPresenter.takePicture(camera);
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -67,7 +109,7 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
             public Observable<RxCamera> call(RxCamera rxCamera) {
                 showLog("isopen: " + rxCamera.isOpenCamera() + ", thread: " + Thread.currentThread());
                 camera = rxCamera;
-                return rxCamera.bindTexture(textureView);
+                return rxCamera.bindTexture(binding.preview);
             }
         }).flatMap(new Func1<RxCamera, Observable<RxCamera>>() {
             @Override
@@ -90,18 +132,35 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
             public void onNext(final RxCamera rxCamera) {
                 camera = rxCamera;
                 showLog("open camera success: " + camera);
-                Toast.makeText(MainActivity.this, "Now you can tap to focus", Toast.LENGTH_LONG).show();
+               // Toast.makeText(MainCameraView.this, "Now you can tap to focus", Toast.LENGTH_LONG).show();
             }
         });
     }
 
     @Override
     public boolean checkCamera() {
-        return false;
+        if (camera == null || !camera.isOpenCamera()) {
+            return false;
+        }
+        return true;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (camera != null) {
+            camera.closeCamera();
+        }
     }
+
+    @Override
+    public void showLog(String s) {
+        Log.d(TAG, s);
+    }
+
+    @Override
+    public void bindBluetoothService() {
+        CameraApp.get(this).getDataManager().bindToBluetoothService(this);
+    }
+
 }

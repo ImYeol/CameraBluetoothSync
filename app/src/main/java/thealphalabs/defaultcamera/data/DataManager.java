@@ -1,5 +1,7 @@
 package thealphalabs.defaultcamera.data;
 
+import android.content.Context;
+
 import thealphalabs.defaultcamera.data.bluetooth.BluetoothHelper;
 
 /**
@@ -7,4 +9,9 @@ import thealphalabs.defaultcamera.data.bluetooth.BluetoothHelper;
  */
 
 public interface DataManager extends BluetoothHelper {
+
+    void bindToBluetoothService(Context context);
+
+    boolean isServiceOn();
+
 }

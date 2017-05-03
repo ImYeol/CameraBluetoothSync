@@ -42,5 +42,7 @@ public class BluetoothPictureInfo {
         this.rawImageData = imageData;
     }
 
-    public void
+    public byte[] getRawImageData(){
+        return this.rawImageData;
+    }
 }

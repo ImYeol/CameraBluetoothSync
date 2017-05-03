@@ -1,7 +1,9 @@
 package thealphalabs.defaultcamera.ui;
 
 import android.app.Application;
+import android.content.Context;
 
+import thealphalabs.defaultcamera.data.AppDataManager;
 import thealphalabs.defaultcamera.data.DataManager;
 
 /**
@@ -22,7 +24,16 @@ public class CameraApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        dataManager = AppDataManager.getInstance();
+        dataManager.bindToBluetoothService(this);
     }
 
+    public static CameraApp get(Context context){
+        return (CameraApp)context.getApplicationContext();
+    }
+
+    public DataManager getDataManager(){
+        return dataManager;
+    }
 
 }
