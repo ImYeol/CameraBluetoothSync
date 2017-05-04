@@ -1,5 +1,7 @@
 package thealphalabs.defaultcamera.model;
 
+import android.util.Base64;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -15,7 +17,7 @@ public class BluetoothPictureInfo {
 
     @Expose
     @SerializedName("rawImageData")
-    private byte[] rawImageData;
+    private String rawImageData;
 
     public BluetoothPictureInfo(){
 
@@ -39,10 +41,16 @@ public class BluetoothPictureInfo {
     }
 
     public void setRawImageData(byte[] imageData){
+        this.rawImageData = Base64.encodeToString(imageData, Base64.DEFAULT);
+    }
+
+    public String getRawImageData(){
+        return this.rawImageData;
+    }
+
+    public void setRawImageData(String imageData){
         this.rawImageData = imageData;
     }
 
-    public byte[] getRawImageData(){
-        return this.rawImageData;
-    }
+
 }
