@@ -148,6 +148,7 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        CameraApp.get(this).getDataManager().unBindBluetoothService(this);
         if (camera != null) {
             camera.closeCamera();
         }

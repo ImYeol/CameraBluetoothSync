@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.util.Log;
 
 import thealphalabs.defaultcamera.model.BluetoothPictureInfo;
 import thealphalabs.defaultcamera.service.BluetoothClientService;
@@ -15,6 +16,7 @@ import thealphalabs.defaultcamera.service.BluetoothClientService;
 
 public class AppDataManager implements DataManager {
 
+    public static final String TAG= "AppDataManager";
     private static AppDataManager instance;
     private BluetoothClientService mBluetoothService;
     private boolean isServiceOn = false;
@@ -31,7 +33,7 @@ public class AppDataManager implements DataManager {
         public void onServiceDisconnected(ComponentName name) {
             isServiceOn = false;
         }
-    }
+    };
 
     public static AppDataManager getInstance(){
         if(instance == null){
@@ -48,10 +50,20 @@ public class AppDataManager implements DataManager {
     public void bindToBluetoothService(Context context){
         Intent intent = new Intent(context, BluetoothClientService.class);
         context.bindService(intent,mConn,Context.BIND_AUTO_CREATE);
+        Log.d(TAG,"bindToBluetoothService");
+    }
+
+    @Override
+    public void unBindBluetoothService(Context context) {
+        Intent intent = new Intent(context, BluetoothClientService.class);
+        context.unbindService(mConn);
+        context.stopService(intent);
     }
 
     @Override
     public boolean sendImageData(BluetoothPictureInfo picture) {
+        if(mBluetoothService == null)
+            Log.d(TAG,"mBluetoothService is null");
         return mBluetoothService.sendImageData(picture);
     }
 

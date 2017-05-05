@@ -12,6 +12,8 @@ public interface DataManager extends BluetoothHelper {
 
     void bindToBluetoothService(Context context);
 
+    void unBindBluetoothService(Context context);
+
     boolean isServiceOn();
 
 }

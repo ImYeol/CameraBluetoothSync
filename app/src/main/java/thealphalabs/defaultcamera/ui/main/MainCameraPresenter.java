@@ -51,7 +51,7 @@ public class MainCameraPresenter<V extends MainCameraMvpView> extends BasePresen
         }, 480, 640, ImageFormat.JPEG, true).subscribe(new Action1<RxCameraData>() {
             @Override
             public void call(RxCameraData rxCameraData) {
-                /*String path = Environment.getExternalStorageDirectory() + "/test.jpg";
+               /* String path = Environment.getExternalStorageDirectory() + "/test.jpg";
                 File file = new File(path);
                 Bitmap bitmap = BitmapFactory.decodeByteArray(rxCameraData.cameraData, 0, rxCameraData.cameraData.length);
                 bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(),

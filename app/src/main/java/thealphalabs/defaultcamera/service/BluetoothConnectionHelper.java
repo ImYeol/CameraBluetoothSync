@@ -30,7 +30,7 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
             "D04E3068-E15B-4482-8306-4CABFA1726E7");
 
     public static BluetoothConnectionHelper getInstance(){
-        if(instance != null){
+        if(instance == null){
             instance = new BluetoothConnectionHelper();
         }
         return instance;
@@ -89,6 +89,7 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
             // because mmSocket is final
             BluetoothSocket tmp = null;
 
+            Log.d(TAG,"ConnectThread ");
             // Get a BluetoothSocket to connect with the given BluetoothDevice
             try {
                 // MY_UUID is the app’s UUID string, also used by the server code
@@ -104,6 +105,7 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
             mBluetoothAdapter.cancelDiscovery();
 
             try {
+                Log.d(TAG,"run connectThread ");
                 // Connect the device through the socket. This will block
                 // until it succeeds or throws an exception
                 mmSocket.connect();
