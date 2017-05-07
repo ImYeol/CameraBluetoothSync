@@ -82,7 +82,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
                                 switch (aclEvent.getAction()) {
                                     case BluetoothDevice.ACTION_ACL_CONNECTED:
                                         //...
-                                        Set<BluetoothDevice> pairedDevices= rxBluetooth.getBondedDevices();
+                                        /*Set<BluetoothDevice> pairedDevices= rxBluetooth.getBondedDevices();
                                         BluetoothDevice btDevice= null;
                                         if(pairedDevices.size() > 0){
                                             for(BluetoothDevice device : pairedDevices){
@@ -90,7 +90,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
                                             }
                                             Log.d(TAG, "connected device: "+ btDevice.getName());
                                         }
-                                        connHelper.connectToServer(btDevice);
+                                        connHelper.connectToServer(btDevice);*/
 
                                         break;
                                     case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
@@ -111,7 +111,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG,"onStartCommand !!!!!!!!!!!!!!!!11");
-        if(rxBluetooth == null){
+        /*if(rxBluetooth == null){
             rxBluetooth = new RxBluetooth(this);
             connHelper = BluetoothConnectionHelper.getInstance();
 
@@ -163,7 +163,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
                             });
                 }
             }
-        }
+        }*/
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -196,31 +196,14 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
             Log.d(TAG,"connHelper is null");
             connHelper = BluetoothConnectionHelper.getInstance();
         }
-        if(connHelper.isConnected()){
+        Log.d(TAG,"sendImageData");
+        if(!connHelper.isConnected()){
             return false;
         } else {
+            Log.d(TAG,"BluetoothConnection is not null");
             BluetoothConnection connection = connHelper.getBluetoothConnection();
-            if(connection != null){
-                GsonBuilder builder = new GsonBuilder().excludeFieldsWithoutExposeAnnotation();
-                final Gson gson = builder.create();
+            connHelper.sendPictureToService(picture);
 
-                String json= gson.toJson(picture);
-                connection.send(json);
-                return false;
-            } else {
-                Log.d(TAG,"BluetoothConnection is null");
-                conectServer();
-                GsonBuilder builder = new GsonBuilder().excludeFieldsWithoutExposeAnnotation();
-                final Gson gson = builder.create();
-
-                String json= gson.toJson(picture);
-                connection = connHelper.getBluetoothConnection();
-                if(connection == null){
-                    Log.d(TAG,"connection is null");
-                }
-                connection.send(json);
-
-            }
             return true;
         }
     }

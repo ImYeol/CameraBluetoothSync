@@ -7,6 +7,9 @@ import com.ragnarok.rxcamera.RxCamera;
 import com.ragnarok.rxcamera.RxCameraData;
 import com.ragnarok.rxcamera.request.Func;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import rx.functions.Action1;
 import thealphalabs.defaultcamera.data.DataManager;
 import thealphalabs.defaultcamera.model.BluetoothPictureInfo;
@@ -64,7 +67,6 @@ public class MainCameraPresenter<V extends MainCameraMvpView> extends BasePresen
                 } catch (IOException e) {
                     e.printStackTrace();
                 }*/
-
                 BluetoothPictureInfo picture = new BluetoothPictureInfo();
                 picture.setFileName(getTimeData());
                 picture.setRawImageData(rxCameraData.cameraData);
@@ -75,8 +77,10 @@ public class MainCameraPresenter<V extends MainCameraMvpView> extends BasePresen
     }
 
     private String getTimeData(){
-        Time time = new Time();
-        String timeData = Long.toString(time.toMillis(false));
+        long now = System.currentTimeMillis();
+        Date date = new Date(now);
+        SimpleDateFormat sdfNow = new SimpleDateFormat("yyyyMMddHHmmss");
+        String timeData= sdfNow.format(date);
         return timeData;
     }
     @Override

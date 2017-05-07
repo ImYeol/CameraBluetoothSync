@@ -1,18 +1,39 @@
 package thealphalabs.defaultcamera.ui.main;
 
 import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
+import android.util.Base64;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
 import com.ragnarok.rxcamera.RxCamera;
 import com.ragnarok.rxcamera.config.RxCameraConfig;
+
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidParameterException;
+import java.util.UUID;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -21,6 +42,7 @@ import rx.functions.Func1;
 import thealphalabs.defaultcamera.R;
 import thealphalabs.defaultcamera.data.AppDataManager;
 import thealphalabs.defaultcamera.databinding.ActivityMainCameraViewBinding;
+import thealphalabs.defaultcamera.model.BluetoothPictureInfo;
 import thealphalabs.defaultcamera.ui.CameraApp;
 import thealphalabs.defaultcamera.ui.base.BaseActivity;
 
@@ -29,6 +51,10 @@ import static android.R.attr.keycode;
 public class MainCameraView extends BaseActivity implements MainCameraMvpView {
 
     public static final String TAG = MainCameraView.class.getSimpleName();
+    private static final int CONNECTION_SUCCESS = 1;
+    private static final int CONNECTION_FAILED = 2;
+    private static final int RECEIBED_DATA=3;
+
 
     private RxCamera camera;
     private MainCameraMvpPresenter<MainCameraMvpView> mPresenter;
@@ -40,6 +66,14 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     private static final int REQUEST_PERMISSION_CODE = 233;
 
     private ActivityMainCameraViewBinding binding;
+
+    //////////////////////////////////
+    public static final UUID MY_UUID =
+            UUID.fromString("D04E3068-E15B-4482-8306-4CABFA1726E7");
+    private BluetoothSocket clientSocket;
+    private AccecptThread accecptThread;
+    private InputStream inputStream;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,5 +197,32 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     public void bindBluetoothService() {
         CameraApp.get(this).getDataManager().bindToBluetoothService(this);
     }
+
+
+    private Handler mHandler = new Handler(Looper.getMainLooper()){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch ( msg.what){
+                case CONNECTION_SUCCESS :
+                    Log.d(TAG,"connection success");
+                    break;
+                case CONNECTION_FAILED :
+                    Log.d(TAG,"connection failed");
+                    try {
+                        clientSocket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case RECEIBED_DATA :
+                    Log.d(TAG,"Received_data");
+                    BluetoothPictureInfo picture = (BluetoothPictureInfo) msg.obj;
+                    Toast.makeText(MainCameraView.this,picture.getFileName(),Toast.LENGTH_SHORT);
+
+                    break;
+            }
+        }
+    };
 
 }

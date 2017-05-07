@@ -3,12 +3,23 @@ package thealphalabs.defaultcamera.service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.os.ParcelUuid;
 import android.util.Log;
 
 import com.github.ivbaranov.rxbluetooth.BluetoothConnection;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
+import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.UUID;
+
+import thealphalabs.defaultcamera.model.BluetoothPictureInfo;
 
 import static thealphalabs.defaultcamera.ui.main.MainCameraView.TAG;
 
@@ -23,11 +34,14 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
     private ConnectThread connectThread;
     private BluetoothConnection mBluetoothConnection;
 
+    private JsonWriter writer;
+    private OutputStream outputStream;
+    private InputStream inputStream;
+
     private static BluetoothConnectionHelper instance;
     private boolean isConnected;
 
-    public static final UUID MY_UUID = UUID.fromString(
-            "D04E3068-E15B-4482-8306-4CABFA1726E7");
+    public final ParcelUuid MY_UUID = ParcelUuid.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     public static BluetoothConnectionHelper getInstance(){
         if(instance == null){
@@ -49,8 +63,34 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
     }
 
     @Override
+    public void sendPictureToService(BluetoothPictureInfo data) {
+        //writer.setIndent("  ");
+        try {
+           // writer.beginObject();
+            //data.setRawImageData("nice");
+            GsonBuilder builder = new GsonBuilder().excludeFieldsWithoutExposeAnnotation();
+            final Gson gson = builder.create();
+            String json = gson.toJson(data,BluetoothPictureInfo.class);
+            Log.d(TAG,"origin fileName: "+data.getFileName());
+            Log.d(TAG,"json fileName : "+ json.substring(0,100));
+            gson.toJson(data, BluetoothPictureInfo.class, writer);
+            writer.flush();
+           // writer.endObject();
+           // writer.close();
+        }  catch (JsonIOException e){
+            Log.d(TAG," json IO exception");
+            e.printStackTrace();
+            //writer.close();
+        } catch (IOException e){
+            Log.d(TAG," IO Exception on sendPictureToServer");
+            e.printStackTrace();
+        }
+
+    }
+
+    @Override
     public boolean isConnected() {
-        return false;
+        return isConnected;
     }
 
     @Override
@@ -93,7 +133,7 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
             // Get a BluetoothSocket to connect with the given BluetoothDevice
             try {
                 // MY_UUID is the app’s UUID string, also used by the server code
-                tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
+                tmp = device.createRfcommSocketToServiceRecord(MY_UUID.getUuid());
             } catch (IOException e) {
                 Log.e(TAG, "Failed to get bluetooth socket.");
             }
@@ -102,7 +142,7 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
         }
         public void run() {
             // Cancel discovery because it will slow down the connection
-            mBluetoothAdapter.cancelDiscovery();
+            //mBluetoothAdapter.cancelDiscovery();
 
             try {
                 Log.d(TAG,"run connectThread ");
@@ -111,11 +151,21 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
                 mmSocket.connect();
                 // Do work to manage the connection (in a separate thread)
                 mSocket = mmSocket;
+                //mBluetoothConnection = new BluetoothConnection(mSocket);
+                outputStream = mSocket.getOutputStream();
+                inputStream = mSocket.getInputStream();
                 isConnected = true;
-                mBluetoothConnection = new BluetoothConnection(mSocket);
+                try {
+                    writer = new JsonWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    Log.d(TAG,"unSupported Encoding Exception");
+                    e.printStackTrace();
+                }
+                Log.d(TAG,"BluetoothConnection success to get stream");
             } catch (IOException connectException) {
                 // Unable to connect; close the socket and get out
                 Log.e(TAG, "IOException : Unable to connect to device");
+                connectException.printStackTrace();
                 cancel();
                 return;
             } catch (Exception e){

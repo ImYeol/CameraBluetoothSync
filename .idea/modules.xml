@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/CameraBluetoothSync.iml" filepath="$PROJECT_DIR$/CameraBluetoothSync.iml" />
       <module fileurl="file://$PROJECT_DIR$/DefaultCamera.iml" filepath="$PROJECT_DIR$/DefaultCamera.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
