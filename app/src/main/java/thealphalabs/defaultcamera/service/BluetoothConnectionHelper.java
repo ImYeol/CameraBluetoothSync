@@ -90,6 +90,10 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
 
     @Override
     public boolean isConnected() {
+        if(mSocket == null){
+            return false;
+        }
+        isConnected = mSocket.isConnected() && isConnected;
         return isConnected;
     }
 
