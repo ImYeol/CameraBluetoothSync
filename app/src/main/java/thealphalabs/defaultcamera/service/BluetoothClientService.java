@@ -10,11 +10,8 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.github.ivbaranov.rxbluetooth.BluetoothConnection;
 import com.github.ivbaranov.rxbluetooth.RxBluetooth;
 import com.github.ivbaranov.rxbluetooth.events.AclEvent;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.util.Set;
 
@@ -84,12 +81,12 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
                                     case BluetoothDevice.ACTION_ACL_CONNECTED:
                                         //...
                                         Log.d(TAG,"Connected Event : "+aclEvent.getBluetoothDevice().getName());
-                                        if( !connHelper.isConnected()){
+                                        /*if( !connHelper.isConnected()){
                                             Log.d(TAG,"try to connect to server");
                                             connHelper.connectToServer(aclEvent.getBluetoothDevice());
                                         } else {
                                             Log.d(TAG,"already connected");
-                                        }
+                                        }*/
                                         saveRecentDevice(aclEvent.getBluetoothDevice().getAddress());
                                         break;
                                     case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
@@ -97,11 +94,11 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
                                         break;
                                     case BluetoothDevice.ACTION_ACL_DISCONNECTED:
                                         //...
-                                        Log.d(TAG,"disConnected Event : "+aclEvent.getBluetoothDevice().getName());
+                                        /*Log.d(TAG,"disConnected Event : "+aclEvent.getBluetoothDevice().getName());
                                         if(connHelper.isConnected()){
                                             connHelper.clear();
-                                        }
-                                        saveRecentDevice(aclEvent.getBluetoothDevice().getAddress());
+                                        }*/
+                                        //saveRecentDevice(aclEvent.getBluetoothDevice().getAddress());
                                         break;
                                 }
                             }
