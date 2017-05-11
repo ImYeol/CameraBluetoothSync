@@ -16,4 +16,7 @@ public interface DataManager extends BluetoothHelper {
 
     boolean isServiceOn();
 
+    boolean isConnected();
+
+
 }

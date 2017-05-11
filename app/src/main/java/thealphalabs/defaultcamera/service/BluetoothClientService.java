@@ -3,22 +3,20 @@ package thealphalabs.defaultcamera.service;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.github.ivbaranov.rxbluetooth.RxBluetooth;
-import com.github.ivbaranov.rxbluetooth.events.AclEvent;
 
 import java.util.Set;
 
 import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
 import thealphalabs.defaultcamera.data.bluetooth.BluetoothHelper;
 import thealphalabs.defaultcamera.model.BluetoothPictureInfo;
 
@@ -37,6 +35,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
     private static final String TAG = "BluetoothClientService";
 
     public static final String RECENT_DEVICE="bluetooth.recent.device";
+    public static final String RECENT_DEVICE_NAME="bluetooth.recent.device.name";
 
     private RxBluetooth rxBluetooth;
     private Subscription connectSubscription;
@@ -46,6 +45,14 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
     public class btBinder extends Binder {
         public BluetoothClientService getService(){
             return BluetoothClientService.this;
+        }
+
+        public boolean isConnected(){
+            if(connHelper != null){
+                return connHelper.isConnected();
+            } else {
+                return false;
+            }
         }
     }
 
@@ -72,7 +79,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
                     Log.d(TAG,"connHelper.isConnected : "+connHelper.isConnected());
                     connectRecentDevice();
                 }
-                connectSubscription = rxBluetooth.observeAclEvent() //
+                /*connectSubscription = rxBluetooth.observeAclEvent() //
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.computation())
                         .subscribe(new Action1<AclEvent>() {
@@ -81,34 +88,35 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
                                     case BluetoothDevice.ACTION_ACL_CONNECTED:
                                         //...
                                         Log.d(TAG,"Connected Event : "+aclEvent.getBluetoothDevice().getName());
-                                        /*if( !connHelper.isConnected()){
+                                        if( !connHelper.isConnected()){
                                             Log.d(TAG,"try to connect to server");
                                             connHelper.connectToServer(aclEvent.getBluetoothDevice());
                                         } else {
                                             Log.d(TAG,"already connected");
-                                        }*/
-                                        saveRecentDevice(aclEvent.getBluetoothDevice().getAddress());
+                                        }
+                                        //saveRecentDevice(aclEvent.getBluetoothDevice().getAddress());
                                         break;
                                     case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
                                         //...
                                         break;
                                     case BluetoothDevice.ACTION_ACL_DISCONNECTED:
                                         //...
-                                        /*Log.d(TAG,"disConnected Event : "+aclEvent.getBluetoothDevice().getName());
+                                        Log.d(TAG,"disConnected Event : "+aclEvent.getBluetoothDevice().getName());
                                         if(connHelper.isConnected()){
                                             connHelper.clear();
-                                        }*/
+                                        }
                                         //saveRecentDevice(aclEvent.getBluetoothDevice().getAddress());
                                         break;
                                 }
                             }
-                        });
+                        });*/
             }
         }
 
     }
 
     public void connectRecentDevice(){
+        getRecentDevice2();
         String address = getRecentDevice();
         BluetoothDevice btDevice = null;
         if(address == ""){
@@ -128,21 +136,42 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
     }
 
     //get preference
-    private String getRecentDevice(){
+    public String getRecentDevice(){
         SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
         return pref.getString(RECENT_DEVICE, "");
     }
 
+    public String getRecentDevice2(){
+        Context otherAppContext = null;
+        try{
+            otherAppContext =
+                    createPackageContext("com.example.gyl115.bluetoothprofiletest",0);
+        }catch(PackageManager.NameNotFoundException e){
+            // log
+            e.printStackTrace();
+
+        }
+        // getting Shared preference from other application
+        SharedPreferences pref
+                = otherAppContext.getSharedPreferences("prefs", Context.MODE_WORLD_READABLE | Context.MODE_MULTI_PROCESS);
+
+        //SharedPreferences pref = getSharedPreferences("prefs",Context.MODE_WORLD_READABLE | MODE_WORLD_READABLE);
+
+        Log.d(TAG,"SharedPref device name : " + pref.getString(RECENT_DEVICE_NAME,""));
+        //Log.d(TAG,pref.getString(RECENT_DEVICE,""));
+        return pref.getString(RECENT_DEVICE, "");
+    }
     // save preference
-    private void saveRecentDevice(String deviceAddress){
+    public void saveRecentDevice(BluetoothDevice device){
         SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
-        editor.putString(RECENT_DEVICE, deviceAddress);
+        editor.putString(RECENT_DEVICE, device.getAddress());
+        editor.putString(RECENT_DEVICE_NAME, device.getName());
         editor.commit();
     }
 
     // remove preference
-    private void removeRecentDevice(){
+    public void removeRecentDevice(){
         SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         editor.remove(RECENT_DEVICE);
@@ -150,7 +179,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
     }
 
     // clear preference
-    private void removeAllPreferences(){
+    public void removeAllPreferences(){
         SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         editor.clear();

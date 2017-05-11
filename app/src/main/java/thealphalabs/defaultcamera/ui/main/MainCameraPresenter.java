@@ -1,7 +1,6 @@
 package thealphalabs.defaultcamera.ui.main;
 
 import android.graphics.ImageFormat;
-import android.text.format.Time;
 
 import com.ragnarok.rxcamera.RxCamera;
 import com.ragnarok.rxcamera.RxCameraData;
@@ -34,9 +33,10 @@ public class MainCameraPresenter<V extends MainCameraMvpView> extends BasePresen
     public void onAttach(V mvpView) {
         super.onAttach(mvpView);
 
-        if( !getDataManager().isServiceOn() ){
+        // this job was done in Splash View before
+       /* if( !getDataManager().isServiceOn() ){
             getMvpView().bindBluetoothService();
-        }
+        }*/
         getMvpView().openCamera();
 
     }
@@ -46,6 +46,7 @@ public class MainCameraPresenter<V extends MainCameraMvpView> extends BasePresen
         if (!getMvpView().checkCamera()) {
             return;
         }
+        getMvpView().showLoading();
         camera.request().takePictureRequest(true, new Func() {
             @Override
             public void call() {
@@ -71,6 +72,8 @@ public class MainCameraPresenter<V extends MainCameraMvpView> extends BasePresen
                 picture.setFileName(getTimeData());
                 picture.setRawImageData(rxCameraData.cameraData);
                 getDataManager().sendImageData(picture);
+                getMvpView().showLog("hide Loading");
+                getMvpView().hideLoading();
                 getMvpView().showLog("Save file on " + path);
             }
         });

@@ -66,6 +66,10 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
         mPresenter.onAttach(this);
     }
 
+    @Override
+    public void showLoading() {
+        super.showLoading();
+    }
 
     private boolean checkPermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
@@ -138,7 +142,7 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
             public void onNext(final RxCamera rxCamera) {
                 camera = rxCamera;
                 showLog("open camera success: " + camera);
-               // Toast.makeText(MainCameraView.this, "Now you can tap to focus", Toast.LENGTH_LONG).show();
+               // Toast.makeText(MainSplashView.this, "Now you can tap to focus", Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -167,7 +171,7 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
 
     @Override
     public void bindBluetoothService() {
-        CameraApp.get(this).getDataManager().bindToBluetoothService(this);
+        //CameraApp.get(this).getDataManager().bindToBluetoothService(this);
     }
 
 

@@ -19,6 +19,12 @@
         <activity android:name=".ui.main.MainCameraView"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"
             android:launchMode="singleTop">
+
+        </activity>
+
+        <activity android:name=".ui.splash.MainSplashView"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -26,7 +32,14 @@
             </intent-filter>
         </activity>
 
+
         <service android:name=".service.BluetoothClientService"/>
+
+        <receiver android:name=".service.receiver.BluetoothConnectedReceiver">
+            <intent-filter>
+                <action android:name="android.bluetooth.device.action.ACL_CONNECTED"/>
+            </intent-filter>
+        </receiver>
 
     </application>
 

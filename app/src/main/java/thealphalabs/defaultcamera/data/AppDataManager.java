@@ -20,6 +20,7 @@ public class AppDataManager implements DataManager {
     private static AppDataManager instance;
     private BluetoothClientService mBluetoothService;
     private boolean isServiceOn = false;
+    private BluetoothClientService.btBinder binder;
 
     private ServiceConnection mConn = new ServiceConnection() {
         @Override
@@ -71,4 +72,10 @@ public class AppDataManager implements DataManager {
     public boolean isServiceOn() {
         return isServiceOn;
     }
+
+    @Override
+    public boolean isConnected() {
+        return binder.isConnected();
+    }
+
 }
