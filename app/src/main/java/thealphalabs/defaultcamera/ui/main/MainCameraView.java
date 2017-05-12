@@ -24,8 +24,6 @@ import thealphalabs.defaultcamera.databinding.ActivityMainCameraViewBinding;
 import thealphalabs.defaultcamera.ui.CameraApp;
 import thealphalabs.defaultcamera.ui.base.BaseActivity;
 
-import static android.R.attr.keycode;
-
 public class MainCameraView extends BaseActivity implements MainCameraMvpView {
 
     public static final String TAG = MainCameraView.class.getSimpleName();
@@ -85,10 +83,10 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(keycode == KeyEvent.KEYCODE_DPAD_DOWN){
+        if(keyCode == KeyEvent.KEYCODE_DPAD_DOWN){
 
         }
-        else if(keycode == KeyEvent.KEYCODE_DPAD_UP){
+        else if(keyCode == KeyEvent.KEYCODE_DPAD_UP){
             mPresenter.takePicture(camera);
             return true;
         }
@@ -102,6 +100,11 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
             return true;
         }
         return false;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
     }
 
     @Override

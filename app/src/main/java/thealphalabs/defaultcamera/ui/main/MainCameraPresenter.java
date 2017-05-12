@@ -50,7 +50,7 @@ public class MainCameraPresenter<V extends MainCameraMvpView> extends BasePresen
         camera.request().takePictureRequest(true, new Func() {
             @Override
             public void call() {
-                getMvpView().showLog("Captured!");
+                //getMvpView().showLog("Captured!");
             }
         }, 480, 640, ImageFormat.JPEG, true).subscribe(new Action1<RxCameraData>() {
             @Override
@@ -72,7 +72,7 @@ public class MainCameraPresenter<V extends MainCameraMvpView> extends BasePresen
                 picture.setFileName(getTimeData());
                 picture.setRawImageData(rxCameraData.cameraData);
                 getDataManager().sendImageData(picture);
-                getMvpView().showLog("hide Loading");
+                //getMvpView().showLog("hide Loading");
                 getMvpView().hideLoading();
                 getMvpView().showLog("Save file on " + path);
             }

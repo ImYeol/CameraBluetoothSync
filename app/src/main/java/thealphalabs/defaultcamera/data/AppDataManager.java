@@ -75,7 +75,10 @@ public class AppDataManager implements DataManager {
 
     @Override
     public boolean isConnected() {
-        return binder.isConnected();
+        if(binder == null)
+            return false;
+        else
+            return binder.isConnected();
     }
 
 }

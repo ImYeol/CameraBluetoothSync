@@ -34,8 +34,8 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
 
     private static final String TAG = "BluetoothClientService";
 
-    public static final String RECENT_DEVICE="bluetooth.recent.device";
-    public static final String RECENT_DEVICE_NAME="bluetooth.recent.device.name";
+    public static final String RECENT_DEVICE="bluetooth.recent.address";
+    public static final String RECENT_DEVICE_NAME="bluetooth.recent.name";
 
     private RxBluetooth rxBluetooth;
     private Subscription connectSubscription;
@@ -56,14 +56,14 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
         }
     }
 
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         Log.d(TAG, "BluetoothService started!");
         rxBluetooth = new RxBluetooth(this);
-        connHelper = BluetoothConnectionHelper.getInstance();
-
+        connHelper = BluetoothConnectionHelper.getInstance(this);
         if (!rxBluetooth.isBluetoothAvailable()) {
             // handle the lack of bluetooth support
             Log.d(TAG, "Bluetooth is not supported!");
@@ -72,6 +72,9 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
             if (!rxBluetooth.isBluetoothEnabled()) {
                 Log.d(TAG, "Bluetooth should be enabled first!");
             } else {
+
+                connHelper.registerAclConnectedReceiver(this);
+
                 if(connHelper.isConnected()){
                     Log.d(TAG,"connHelper.isConnected : "+connHelper.isConnected());
 
@@ -115,9 +118,22 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
 
     }
 
+    @Override
+    public boolean onUnbind(Intent intent) {
+        connHelper.unRegisterAclConnectedReceiver(this);
+        return super.onUnbind(intent);
+    }
+
+    @Override
+    public void onTrimMemory(int level) {
+        Log.d(TAG,"onTrimMemory");
+        super.onTrimMemory(level);
+    }
+
+
     public void connectRecentDevice(){
-        getRecentDevice2();
-        String address = getRecentDevice();
+        //getRecentDevice2();
+        String address = getRecentDevice2();
         BluetoothDevice btDevice = null;
         if(address == ""){
             Set<BluetoothDevice> pairedDevices= rxBluetooth.getBondedDevices();
@@ -125,7 +141,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
                 for(BluetoothDevice device : pairedDevices){
                     btDevice = device;
                 }
-                Log.d(TAG, "connected device: "+ btDevice.getName());
+                Log.d(TAG, "Random connected device: "+ btDevice.getName());
             }
         }
         else {
@@ -135,27 +151,18 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
         connHelper.connectToServer(btDevice);
     }
 
-    //get preference
-    public String getRecentDevice(){
-        SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
-        return pref.getString(RECENT_DEVICE, "");
-    }
-
     public String getRecentDevice2(){
         Context otherAppContext = null;
         try{
             otherAppContext =
-                    createPackageContext("com.example.gyl115.bluetoothprofiletest",0);
+                    createPackageContext("thealphalabs.areumlauncher",0);
         }catch(PackageManager.NameNotFoundException e){
             // log
             e.printStackTrace();
-
         }
         // getting Shared preference from other application
         SharedPreferences pref
                 = otherAppContext.getSharedPreferences("prefs", Context.MODE_WORLD_READABLE | Context.MODE_MULTI_PROCESS);
-
-        //SharedPreferences pref = getSharedPreferences("prefs",Context.MODE_WORLD_READABLE | MODE_WORLD_READABLE);
 
         Log.d(TAG,"SharedPref device name : " + pref.getString(RECENT_DEVICE_NAME,""));
         //Log.d(TAG,pref.getString(RECENT_DEVICE,""));
@@ -188,7 +195,6 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG,"onStartCommand !!!!!!!!!!!!!!!!11");
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -211,6 +217,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+        Log.d(TAG,"onBind Call");
         return mBinder;
     }
 
@@ -219,7 +226,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
     public boolean sendImageData(BluetoothPictureInfo picture) {
         if(connHelper == null){
             Log.d(TAG,"connHelper is null");
-            connHelper = BluetoothConnectionHelper.getInstance();
+            connHelper = BluetoothConnectionHelper.getInstance(this);
         }
         Log.d(TAG,"sendImageData, isConnected: " + connHelper.isConnected());
         if(!connHelper.isConnected()){

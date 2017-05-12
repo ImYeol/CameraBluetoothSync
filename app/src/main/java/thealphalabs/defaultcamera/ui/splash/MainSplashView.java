@@ -14,6 +14,7 @@ import com.ragnarok.rxcamera.RxCamera;
 import thealphalabs.defaultcamera.R;
 import thealphalabs.defaultcamera.data.AppDataManager;
 import thealphalabs.defaultcamera.databinding.ActivityMainCameraViewBinding;
+import thealphalabs.defaultcamera.service.BluetoothConnectionHelper;
 import thealphalabs.defaultcamera.ui.CameraApp;
 import thealphalabs.defaultcamera.ui.base.BaseActivity;
 import thealphalabs.defaultcamera.ui.main.MainCameraView;
@@ -67,10 +68,13 @@ public class MainSplashView extends BaseActivity implements MainSplashMvpView {
     protected void onResume() {
         super.onResume();
         if(mPresenter.isBinded() && mPresenter.checkServerConnected()){
+            Log.d(TAG,"onResume - openCameraAcitivity");
             openCameraActivity();
         } else {
+            Log.d(TAG,"onResume - register receiver");
             IntentFilter filter = new IntentFilter();
             filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+            filter.addAction(BluetoothConnectionHelper.onSocketConnected);
             registerReceiver(BtConnectedReceiver,filter);
         }
     }

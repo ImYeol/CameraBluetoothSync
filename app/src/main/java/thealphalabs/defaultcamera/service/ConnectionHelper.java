@@ -1,6 +1,7 @@
 package thealphalabs.defaultcamera.service;
 
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 
 import com.github.ivbaranov.rxbluetooth.BluetoothConnection;
 
@@ -21,4 +22,9 @@ public interface ConnectionHelper {
     void sendPictureToService(BluetoothPictureInfo data);
 
     void clear();
+
+    void registerAclConnectedReceiver(Context context);
+    void unRegisterAclConnectedReceiver(Context context);
+
+
 }

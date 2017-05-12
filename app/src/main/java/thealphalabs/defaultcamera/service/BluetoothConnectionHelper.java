@@ -3,6 +3,10 @@ package thealphalabs.defaultcamera.service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.ParcelUuid;
 import android.util.Log;
 
@@ -17,7 +21,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.UUID;
 
 import thealphalabs.defaultcamera.model.BluetoothPictureInfo;
 
@@ -28,6 +31,8 @@ import static thealphalabs.defaultcamera.ui.main.MainCameraView.TAG;
  */
 
 public class BluetoothConnectionHelper implements ConnectionHelper {
+
+    public static final String onSocketConnected = "BluetoothConnectionHelper.connected";
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothSocket mSocket;
@@ -40,17 +45,59 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
 
     private static BluetoothConnectionHelper instance;
     private boolean isConnected;
+    private Context context;
 
     public final ParcelUuid MY_UUID = ParcelUuid.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-    public static BluetoothConnectionHelper getInstance(){
+
+    private BroadcastReceiver BtConnectedReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if(intent.getAction().equals(BluetoothDevice.ACTION_ACL_CONNECTED)){
+                if(isConnected()){
+                    Log.d(TAG,"BtConnectedReceiver - isConnected True");
+                } else {
+                    Log.d(TAG,"BtConnectedReceiver - isConnected false");
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    connectToServer(device);
+                }
+            } else if(intent.getAction().equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)){
+                Log.d(TAG,"BtConnectedReceiver - ACL_DisConnected");
+                if(isConnected()){
+                    connectThread.interrupt();
+                    connectThread.cancel();
+                    connectThread = null;
+                }
+            }
+        }
+    };
+
+    public void registerAclConnectedReceiver(Context context){
+        if(BtConnectedReceiver == null){
+            Log.d(TAG,"registerAclConnectedReceiver - BtConnectedReceiver is null");
+        }
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        context.registerReceiver(BtConnectedReceiver,filter);
+    }
+
+    public void unRegisterAclConnectedReceiver(Context context){
+        context.unregisterReceiver(BtConnectedReceiver);
+        BtConnectedReceiver = null;
+    }
+
+    public static BluetoothConnectionHelper getInstance(Context context){
         if(instance == null){
-            instance = new BluetoothConnectionHelper();
+            instance = new BluetoothConnectionHelper(context);
         }
         return instance;
     }
 
-    private BluetoothConnectionHelper(){
+    private BluetoothConnectionHelper(Context context){
+        this.context = context;
         mBluetoothConnection = null;
         isConnected = false;
         connectThread = null;
@@ -58,8 +105,14 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
     }
     @Override
     public void connectToServer(BluetoothDevice device) {
-        connectThread = new ConnectThread(device);
-        connectThread.start();
+        if(connectThread == null ) {
+            connectThread = new ConnectThread(device);
+            connectThread.start();
+        } else {
+            if(!connectThread.isAlive()){
+                connectThread.start();
+            }
+        }
     }
 
     @Override
@@ -150,15 +203,19 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
 
             try {
                 Log.d(TAG,"run connectThread ");
+                if(mmSocket.isConnected()){
+                    Log.d(TAG,"mmSocket is already connected");
+                    return ;
+                }
                 // Connect the device through the socket. This will block
                 // until it succeeds or throws an exception
                 mmSocket.connect();
+                isConnected = true;
                 // Do work to manage the connection (in a separate thread)
                 mSocket = mmSocket;
                 //mBluetoothConnection = new BluetoothConnection(mSocket);
                 outputStream = mSocket.getOutputStream();
                 inputStream = mSocket.getInputStream();
-                isConnected = true;
                 try {
                     writer = new JsonWriter(new OutputStreamWriter(outputStream, "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
@@ -166,6 +223,8 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
                     e.printStackTrace();
                 }
                 Log.d(TAG,"BluetoothConnection success to get stream");
+                notifySocketConnected();
+
             } catch (IOException connectException) {
                 // Unable to connect; close the socket and get out
                 Log.e(TAG, "IOException : Unable to connect to device");
@@ -183,11 +242,18 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
         /** Will cancel an in-progress connection, and close the socket */
         public void cancel() {
             try {
-                mmSocket.close();
                 isConnected = false;
+                if(mmSocket.isConnected())
+                    mmSocket.close();
             } catch (IOException e) {
                 Log.e(TAG, "[cancel()] Failed to close socket.");
             }
+        }
+
+        public void notifySocketConnected(){
+            Intent intent = new Intent();
+            intent.setAction(onSocketConnected);
+            context.sendBroadcast(intent);
         }
     }
 }
