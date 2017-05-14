@@ -146,7 +146,7 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
         if(mSocket == null){
             return false;
         }
-        isConnected = mSocket.isConnected() && isConnected;
+        isConnected = mSocket.isConnected();
         return isConnected;
     }
 
@@ -195,6 +195,7 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
                 Log.e(TAG, "Failed to get bluetooth socket.");
             }
             mmSocket = tmp;
+            mSocket=tmp;
             mmDevice = device;
         }
         public void run() {
@@ -209,10 +210,10 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
                 }
                 // Connect the device through the socket. This will block
                 // until it succeeds or throws an exception
+
                 mmSocket.connect();
                 isConnected = true;
                 // Do work to manage the connection (in a separate thread)
-                mSocket = mmSocket;
                 //mBluetoothConnection = new BluetoothConnection(mSocket);
                 outputStream = mSocket.getOutputStream();
                 inputStream = mSocket.getInputStream();

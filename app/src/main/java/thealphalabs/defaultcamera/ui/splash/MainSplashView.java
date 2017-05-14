@@ -22,11 +22,6 @@ import thealphalabs.defaultcamera.ui.main.MainCameraView;
 public class MainSplashView extends BaseActivity implements MainSplashMvpView {
 
     public static final String TAG = MainSplashView.class.getSimpleName();
-    private static final int CONNECTION_SUCCESS = 1;
-    private static final int CONNECTION_FAILED = 2;
-    private static final int RECEIBED_DATA=3;
-
-
     private RxCamera camera;
     private MainSplashMvpPresenter<MainSplashMvpView> mPresenter;
 
@@ -37,14 +32,6 @@ public class MainSplashView extends BaseActivity implements MainSplashMvpView {
             openCameraActivity();
         }
     };
-    private static final String[] REQUEST_PERMISSIONS = new String[] {
-            Manifest.permission.CAMERA,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-    };
-
-    private static final int REQUEST_PERMISSION_CODE = 233;
-
-    private ActivityMainCameraViewBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +68,7 @@ public class MainSplashView extends BaseActivity implements MainSplashMvpView {
 
     @Override
     protected void onPause() {
+        Log.d(TAG,"onPause");
         unregisterReceiver(BtConnectedReceiver);
         super.onPause();
     }

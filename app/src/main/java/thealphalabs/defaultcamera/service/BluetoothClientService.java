@@ -204,7 +204,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
         Log.d(TAG, "BluetoothService stopped!");
         rxBluetooth.cancelDiscovery();
         connHelper.clear();
-        unsubscribe(connectSubscription);
+        //unsubscribe(connectSubscription);
     }
 
     private static void unsubscribe(Subscription subscription) {

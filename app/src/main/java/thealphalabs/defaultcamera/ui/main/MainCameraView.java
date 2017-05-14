@@ -105,6 +105,12 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d(TAG,"onResume");
+        if(checkCamera()){
+            closeCamera();
+        }
+        openCamera();
+
     }
 
     @Override
@@ -151,6 +157,12 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     }
 
     @Override
+    public void closeCamera() {
+        camera.closeCamera();
+        camera = null;
+    }
+
+    @Override
     public boolean checkCamera() {
         if (camera == null || !camera.isOpenCamera()) {
             return false;
@@ -159,12 +171,22 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG,"onPause");
+        if(!checkCamera()) {
+            closeCamera();
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d(TAG,"onDestroy");
         CameraApp.get(this).getDataManager().unBindBluetoothService(this);
-        if (camera != null) {
+        /*if (camera != null) {
             camera.closeCamera();
-        }
+        }*/
     }
 
     @Override

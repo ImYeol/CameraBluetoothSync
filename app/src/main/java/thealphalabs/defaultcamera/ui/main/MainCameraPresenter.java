@@ -37,7 +37,7 @@ public class MainCameraPresenter<V extends MainCameraMvpView> extends BasePresen
        /* if( !getDataManager().isServiceOn() ){
             getMvpView().bindBluetoothService();
         }*/
-        getMvpView().openCamera();
+        //getMvpView().openCamera();
 
     }
 

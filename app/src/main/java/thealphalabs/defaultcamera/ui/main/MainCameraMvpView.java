@@ -10,6 +10,8 @@ public interface MainCameraMvpView extends MvpView {
 
     void openCamera();
 
+    void closeCamera();
+
     boolean checkCamera();
 
     void showLog(String s);
