@@ -180,6 +180,7 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
 
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
+        private int retryCount=0;
 
         public ConnectThread(BluetoothDevice device) {
             // Use a temporary object that is later assigned to mmSocket,
@@ -201,40 +202,45 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
         public void run() {
             // Cancel discovery because it will slow down the connection
             //mBluetoothAdapter.cancelDiscovery();
-
-            try {
-                Log.d(TAG,"run connectThread ");
-                if(mmSocket.isConnected()){
-                    Log.d(TAG,"mmSocket is already connected");
-                    return ;
-                }
-                // Connect the device through the socket. This will block
-                // until it succeeds or throws an exception
-
-                mmSocket.connect();
-                isConnected = true;
-                // Do work to manage the connection (in a separate thread)
-                //mBluetoothConnection = new BluetoothConnection(mSocket);
-                outputStream = mSocket.getOutputStream();
-                inputStream = mSocket.getInputStream();
+            retryCount = 3;
+            while(retryCount > 0) {
                 try {
-                    writer = new JsonWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    Log.d(TAG,"unSupported Encoding Exception");
-                    e.printStackTrace();
-                }
-                Log.d(TAG,"BluetoothConnection success to get stream");
-                notifySocketConnected();
+                    Log.d(TAG, "run connectThread ");
+                    if (mmSocket.isConnected()) {
+                        Log.d(TAG, "mmSocket is already connected");
+                        return;
+                    }
+                    // Connect the device through the socket. This will block
+                    // until it succeeds or throws an exception
 
-            } catch (IOException connectException) {
-                // Unable to connect; close the socket and get out
-                Log.e(TAG, "IOException : Unable to connect to device");
-                connectException.printStackTrace();
-                cancel();
-                return;
-            } catch (Exception e){
-                Log.e(TAG,"unable to get stream");
-                Log.e(TAG,e.getMessage());
+                    mmSocket.connect();
+                    isConnected = true;
+                    // Do work to manage the connection (in a separate thread)
+                    //mBluetoothConnection = new BluetoothConnection(mSocket);
+                    outputStream = mSocket.getOutputStream();
+                    inputStream = mSocket.getInputStream();
+                    try {
+                        writer = new JsonWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+                    } catch (UnsupportedEncodingException e) {
+                        Log.d(TAG, "unSupported Encoding Exception");
+                        e.printStackTrace();
+                    }
+                    Log.d(TAG, "BluetoothConnection success to get stream " + mSocket.isConnected() );
+                    notifySocketConnected();
+                    break;
+
+                } catch (IOException connectException) {
+                    // Unable to connect; close the socket and get out
+                    Log.e(TAG, "IOException : Unable to connect to device");
+                    connectException.printStackTrace();
+                    retryCount--;
+                    cancel();
+                    return;
+                } catch (Exception e) {
+                    retryCount--;
+                    Log.e(TAG, "unable to get stream");
+                    Log.e(TAG, e.getMessage());
+                }
             }
 
             // Save connected device instance if succeed to connect.

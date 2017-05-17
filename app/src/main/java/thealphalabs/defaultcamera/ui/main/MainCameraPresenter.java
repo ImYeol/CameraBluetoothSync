@@ -1,6 +1,12 @@
 package thealphalabs.defaultcamera.ui.main;
 
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.ImageFormat;
+import android.util.Log;
 
 import com.ragnarok.rxcamera.RxCamera;
 import com.ragnarok.rxcamera.RxCameraData;
@@ -12,9 +18,11 @@ import java.util.Date;
 import rx.functions.Action1;
 import thealphalabs.defaultcamera.data.DataManager;
 import thealphalabs.defaultcamera.model.BluetoothPictureInfo;
+import thealphalabs.defaultcamera.service.BluetoothConnectionHelper;
 import thealphalabs.defaultcamera.ui.base.BasePresenter;
 
 import static android.R.attr.path;
+import static thealphalabs.defaultcamera.ui.splash.MainSplashView.TAG;
 
 /**
  * Created by yeol on 17. 5. 1.
@@ -23,6 +31,17 @@ import static android.R.attr.path;
 public class MainCameraPresenter<V extends MainCameraMvpView> extends BasePresenter<V>
                                                             implements MainCameraMvpPresenter<V> {
 
+
+    private BroadcastReceiver BtConnectedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG,"BtConnected onReceive");
+            getMvpView().removeSplashView();
+            if(!getMvpView().checkCamera())
+                getMvpView().openCamera();
+            context.unregisterReceiver(this);
+        }
+    };
 
     public MainCameraPresenter(DataManager dataManager){
         super(dataManager);
@@ -34,9 +53,9 @@ public class MainCameraPresenter<V extends MainCameraMvpView> extends BasePresen
         super.onAttach(mvpView);
 
         // this job was done in Splash View before
-       /* if( !getDataManager().isServiceOn() ){
+        if( !getDataManager().isServiceOn() ){
             getMvpView().bindBluetoothService();
-        }*/
+        }
         //getMvpView().openCamera();
 
     }
@@ -88,6 +107,29 @@ public class MainCameraPresenter<V extends MainCameraMvpView> extends BasePresen
     }
     @Override
     public boolean isBtServiceConnected() {
+        return getDataManager().isServiceOn();
+    }
+
+    @Override
+    public void registerConnectedReceiver(Context context) {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothConnectionHelper.onSocketConnected);
+        context.registerReceiver(BtConnectedReceiver,filter);
+    }
+
+    @Override
+    public void unRegisterConnectedReceiver(Context context) {
+        context.unregisterReceiver(BtConnectedReceiver);
+    }
+
+    @Override
+    public boolean checkServerConnected() {
+        return getDataManager().isConnected();
+    }
+
+    @Override
+    public boolean isBinded() {
         return getDataManager().isServiceOn();
     }
 }

@@ -1,6 +1,7 @@
 package thealphalabs.defaultcamera.ui.main;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
 import android.graphics.Point;
@@ -10,6 +11,7 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.View;
 
 import com.ragnarok.rxcamera.RxCamera;
 import com.ragnarok.rxcamera.config.RxCameraConfig;
@@ -17,6 +19,7 @@ import com.ragnarok.rxcamera.config.RxCameraConfig;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 import rx.functions.Func1;
 import thealphalabs.defaultcamera.R;
 import thealphalabs.defaultcamera.data.AppDataManager;
@@ -43,6 +46,8 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
 
     private ActivityMainCameraViewBinding binding;
 
+    private View splashView = null;
+
 
 
     @Override
@@ -62,6 +67,8 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     protected void bindAndAttach() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main_camera_view);
         mPresenter.onAttach(this);
+        //addSplashView();
+        //mPresenter.registerConnectedReceiver(this);
     }
 
     @Override
@@ -105,12 +112,38 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG,"onResume");
-        if(checkCamera()){
-            closeCamera();
-        }
-        openCamera();
+        addSplashView();
+        /*Log.d(TAG,"onResume : "+ checkCamera());
+        if( !mPresenter.isBinded() ){
+            mPresenter.registerConnectedReceiver(this);
+            //bindBluetoothService();
+        }*/
+        startPreview();
+       /* if(!checkCamera()){
+            //closeCamera();
+            openCamera();
 
+        }*/
+    }
+
+    private void startPreview(){
+        if(mPresenter.isBinded() && mPresenter.checkServerConnected()){
+            Log.d(TAG,"onResume - openCameraAcitivity");
+            removeSplashView();
+            if(!checkCamera()){
+                //closeCamera();
+                openCamera();
+            }
+        } else {
+            Log.d(TAG,"onResume - register receiver : "+mPresenter.isBinded() + " " + mPresenter.checkServerConnected());
+            mPresenter.registerConnectedReceiver(this);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        Log.d(TAG,"onNewIntent");
+        super.onNewIntent(intent);
     }
 
     @Override
@@ -158,7 +191,13 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
 
     @Override
     public void closeCamera() {
-        camera.closeCamera();
+        camera.closeCameraWithResult().subscribe(new Action1<Boolean>() {
+            @Override
+            public void call(Boolean aBoolean) {
+                showLog("close camera finished, success: " + aBoolean);
+            }
+        });
+        //camera.closeCamera();
         camera = null;
     }
 
@@ -173,8 +212,8 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(TAG,"onPause");
-        if(!checkCamera()) {
+        Log.d(TAG,"onPause : " +checkCamera());
+        if(checkCamera()) {
             closeCamera();
         }
     }
@@ -196,7 +235,19 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
 
     @Override
     public void bindBluetoothService() {
-        //CameraApp.get(this).getDataManager().bindToBluetoothService(this);
+        CameraApp.get(this).getDataManager().bindToBluetoothService(this);
+    }
+
+    @Override
+    public void removeSplashView() {
+        if(splashView != null)
+            binding.rootView.removeView(splashView);
+    }
+
+    @Override
+    public void addSplashView() {
+        splashView = getLayoutInflater().inflate(R.layout.activity_splash,null);
+        binding.rootView.addView(splashView);
     }
 
 

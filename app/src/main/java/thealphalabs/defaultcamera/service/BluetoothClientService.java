@@ -47,13 +47,15 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
             return BluetoothClientService.this;
         }
 
-        public boolean isConnected(){
+        /*public boolean isConnected(){
             if(connHelper != null){
+                Log.d(TAG,"isConnected : "+connHelper.isConnected());
                 return connHelper.isConnected();
             } else {
+                Log.d(TAG,"isConnected : "+connHelper.isConnected());
                 return false;
             }
-        }
+        }*/
     }
 
 
@@ -116,6 +118,16 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
             }
         }
 
+    }
+
+    public boolean isConnected(){
+        if(connHelper != null){
+            Log.d(TAG,"isConnected : "+connHelper.isConnected());
+            return connHelper.isConnected();
+        } else {
+            Log.d(TAG,"isConnected : "+connHelper.isConnected());
+            return false;
+        }
     }
 
     @Override

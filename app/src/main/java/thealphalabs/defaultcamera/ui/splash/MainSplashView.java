@@ -1,6 +1,5 @@
 package thealphalabs.defaultcamera.ui.splash;
 
-import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -13,7 +12,6 @@ import com.ragnarok.rxcamera.RxCamera;
 
 import thealphalabs.defaultcamera.R;
 import thealphalabs.defaultcamera.data.AppDataManager;
-import thealphalabs.defaultcamera.databinding.ActivityMainCameraViewBinding;
 import thealphalabs.defaultcamera.service.BluetoothConnectionHelper;
 import thealphalabs.defaultcamera.ui.CameraApp;
 import thealphalabs.defaultcamera.ui.base.BaseActivity;
@@ -29,7 +27,7 @@ public class MainSplashView extends BaseActivity implements MainSplashMvpView {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG,"BtConnected onReceive");
-            openCameraActivity();
+            //openCameraActivity();
         }
     };
 
@@ -89,6 +87,5 @@ public class MainSplashView extends BaseActivity implements MainSplashMvpView {
     public void bindBluetoothService() {
         CameraApp.get(this).getDataManager().bindToBluetoothService(this);
     }
-
 
 }

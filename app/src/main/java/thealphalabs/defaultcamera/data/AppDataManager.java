@@ -75,10 +75,12 @@ public class AppDataManager implements DataManager {
 
     @Override
     public boolean isConnected() {
-        if(binder == null)
+        if(mBluetoothService == null) {
+            Log.d(TAG, "isConnected - binder is null");
             return false;
+        }
         else
-            return binder.isConnected();
+            return mBluetoothService.isConnected();
     }
 
 }

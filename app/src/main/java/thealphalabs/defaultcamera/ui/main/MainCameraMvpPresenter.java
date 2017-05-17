@@ -1,5 +1,7 @@
 package thealphalabs.defaultcamera.ui.main;
 
+import android.content.Context;
+
 import com.ragnarok.rxcamera.RxCamera;
 
 import thealphalabs.defaultcamera.ui.base.MvpPresenter;
@@ -13,4 +15,12 @@ public interface MainCameraMvpPresenter<V extends MainCameraMvpView> extends Mvp
     void takePicture(RxCamera camera);
 
     boolean isBtServiceConnected();
+
+    void registerConnectedReceiver(Context context);
+
+    void unRegisterConnectedReceiver(Context context);
+
+    boolean checkServerConnected();
+
+    boolean isBinded();
 }

@@ -14,7 +14,6 @@ public class MainSplashPresenter<V extends MainSplashMvpView> extends BasePresen
         super(dataManager);
     }
 
-
     @Override
     public void onAttach(V mvpView) {
         super.onAttach(mvpView);
