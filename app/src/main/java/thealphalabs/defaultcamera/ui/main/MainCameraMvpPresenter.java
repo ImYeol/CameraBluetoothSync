@@ -20,6 +20,10 @@ public interface MainCameraMvpPresenter<V extends MainCameraMvpView> extends Mvp
 
     void unRegisterConnectedReceiver(Context context);
 
+    void registerDisConnectedReceiver(Context context);
+
+    void unRegisterDisConnectedReceiver(Context context);
+
     boolean checkServerConnected();
 
     boolean isBinded();

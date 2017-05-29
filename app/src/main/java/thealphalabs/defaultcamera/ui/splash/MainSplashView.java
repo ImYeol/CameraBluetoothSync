@@ -1,6 +1,5 @@
 package thealphalabs.defaultcamera.ui.splash;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -27,13 +26,14 @@ public class MainSplashView extends BaseActivity implements MainSplashMvpView {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG,"BtConnected onReceive");
-            //openCameraActivity();
+            openCameraActivity();
         }
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG,"onCreate");
         setUp();
         bindAndAttach();
     }
@@ -50,15 +50,22 @@ public class MainSplashView extends BaseActivity implements MainSplashMvpView {
     }
 
     @Override
+    protected void onStart() {
+        Log.d(TAG,"onStart");
+        bindBluetoothService();
+        super.onStart();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         if(mPresenter.isBinded() && mPresenter.checkServerConnected()){
             Log.d(TAG,"onResume - openCameraAcitivity");
             openCameraActivity();
         } else {
-            Log.d(TAG,"onResume - register receiver");
+            Log.d(TAG,"onResume - register receiver : "+ BtConnectedReceiver);
             IntentFilter filter = new IntentFilter();
-            filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+            //filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
             filter.addAction(BluetoothConnectionHelper.onSocketConnected);
             registerReceiver(BtConnectedReceiver,filter);
         }
@@ -69,6 +76,12 @@ public class MainSplashView extends BaseActivity implements MainSplashMvpView {
         Log.d(TAG,"onPause");
         unregisterReceiver(BtConnectedReceiver);
         super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        Log.d(TAG,"onStop");
+        super.onStop();
     }
 
     @Override
@@ -85,7 +98,7 @@ public class MainSplashView extends BaseActivity implements MainSplashMvpView {
 
     @Override
     public void bindBluetoothService() {
-        CameraApp.get(this).getDataManager().bindToBluetoothService(this);
+        CameraApp.get(this).getDataManager().bindToBluetoothService(getApplicationContext());
     }
 
 }

@@ -32,7 +32,7 @@ import thealphalabs.defaultcamera.model.BluetoothPictureInfo;
 
 public class BluetoothClientService extends Service implements BluetoothHelper{
 
-    private static final String TAG = "BluetoothClientService";
+    public static final String TAG = "BluetoothClientService";
 
     public static final String RECENT_DEVICE="bluetooth.recent.address";
     public static final String RECENT_DEVICE_NAME="bluetooth.recent.name";
@@ -63,7 +63,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
     public void onCreate() {
         super.onCreate();
 
-        Log.d(TAG, "BluetoothService started!");
+        Log.d(TAG, "onCreate : BluetoothService started!");
         rxBluetooth = new RxBluetooth(this);
         connHelper = BluetoothConnectionHelper.getInstance(this);
         if (!rxBluetooth.isBluetoothAvailable()) {
@@ -84,37 +84,6 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
                     Log.d(TAG,"connHelper.isConnected : "+connHelper.isConnected());
                     connectRecentDevice();
                 }
-                /*connectSubscription = rxBluetooth.observeAclEvent() //
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.computation())
-                        .subscribe(new Action1<AclEvent>() {
-                            @Override public void call(AclEvent aclEvent) {
-                                switch (aclEvent.getAction()) {
-                                    case BluetoothDevice.ACTION_ACL_CONNECTED:
-                                        //...
-                                        Log.d(TAG,"Connected Event : "+aclEvent.getBluetoothDevice().getName());
-                                        if( !connHelper.isConnected()){
-                                            Log.d(TAG,"try to connect to server");
-                                            connHelper.connectToServer(aclEvent.getBluetoothDevice());
-                                        } else {
-                                            Log.d(TAG,"already connected");
-                                        }
-                                        //saveRecentDevice(aclEvent.getBluetoothDevice().getAddress());
-                                        break;
-                                    case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
-                                        //...
-                                        break;
-                                    case BluetoothDevice.ACTION_ACL_DISCONNECTED:
-                                        //...
-                                        Log.d(TAG,"disConnected Event : "+aclEvent.getBluetoothDevice().getName());
-                                        if(connHelper.isConnected()){
-                                            connHelper.clear();
-                                        }
-                                        //saveRecentDevice(aclEvent.getBluetoothDevice().getAddress());
-                                        break;
-                                }
-                            }
-                        });*/
             }
         }
 
@@ -132,6 +101,7 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
 
     @Override
     public boolean onUnbind(Intent intent) {
+        Log.d(TAG, "onUnbind");
         connHelper.unRegisterAclConnectedReceiver(this);
         return super.onUnbind(intent);
     }
@@ -213,8 +183,8 @@ public class BluetoothClientService extends Service implements BluetoothHelper{
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "BluetoothService stopped!");
-        rxBluetooth.cancelDiscovery();
+        Log.d(TAG, "BluetoothService onDestroy!");
+        //rxBluetooth.cancelDiscovery();
         connHelper.clear();
         //unsubscribe(connectSubscription);
     }

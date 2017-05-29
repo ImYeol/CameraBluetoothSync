@@ -52,5 +52,10 @@ public class BluetoothPictureInfo {
         this.rawImageData = imageData;
     }
 
+    public void clear(){
+        this.rawImageData = null;
+        this.fileName = null;
+    }
+
 
 }

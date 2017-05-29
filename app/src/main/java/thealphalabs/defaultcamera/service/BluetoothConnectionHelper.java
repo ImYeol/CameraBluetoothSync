@@ -24,7 +24,7 @@ import java.io.UnsupportedEncodingException;
 
 import thealphalabs.defaultcamera.model.BluetoothPictureInfo;
 
-import static thealphalabs.defaultcamera.ui.main.MainCameraView.TAG;
+import static thealphalabs.defaultcamera.service.BluetoothClientService.TAG;
 
 /**
  * Created by yeol on 17. 5. 2.
@@ -33,6 +33,7 @@ import static thealphalabs.defaultcamera.ui.main.MainCameraView.TAG;
 public class BluetoothConnectionHelper implements ConnectionHelper {
 
     public static final String onSocketConnected = "BluetoothConnectionHelper.connected";
+    public static final String onSocketDisConnected = "BluetoothConnectionHelper.disconnected";
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothSocket mSocket;
@@ -50,7 +51,30 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
     public final ParcelUuid MY_UUID = ParcelUuid.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
 
-    private BroadcastReceiver BtConnectedReceiver = new BroadcastReceiver() {
+    public class ConnectedReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals(BluetoothDevice.ACTION_ACL_CONNECTED)){
+                if(isConnected()){
+                    Log.d(TAG,"BtConnectedReceiver - isConnected True");
+                } else {
+                    Log.d(TAG,"BtConnectedReceiver - isConnected false");
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    connectToServer(device);
+                }
+            } else if(intent.getAction().equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)){
+                Log.d(TAG,"BtConnectedReceiver - ACL_DisConnected");
+                if(isConnected()){
+                    connectThread.interrupt();
+                    connectThread.cancel();
+                    connectThread = null;
+                    notifySocketDisConnected();
+                }
+            }
+        }
+    }
+    private ConnectedReceiver BtConnectedReceiver = new ConnectedReceiver();
+    /*private BroadcastReceiver BtConnectedReceiver = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -69,14 +93,16 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
                     connectThread.interrupt();
                     connectThread.cancel();
                     connectThread = null;
+                    notifySocketDisConnected();
                 }
             }
         }
-    };
+    };*/
 
     public void registerAclConnectedReceiver(Context context){
         if(BtConnectedReceiver == null){
             Log.d(TAG,"registerAclConnectedReceiver - BtConnectedReceiver is null");
+            BtConnectedReceiver = new ConnectedReceiver();
         }
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
@@ -106,10 +132,12 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
     @Override
     public void connectToServer(BluetoothDevice device) {
         if(connectThread == null ) {
+            Log.d(TAG,"connectToServer == null");
             connectThread = new ConnectThread(device);
             connectThread.start();
         } else {
             if(!connectThread.isAlive()){
+                Log.d(TAG,"connectToServer not null");
                 connectThread.start();
             }
         }
@@ -124,7 +152,7 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
             GsonBuilder builder = new GsonBuilder().excludeFieldsWithoutExposeAnnotation();
             final Gson gson = builder.create();
             String json = gson.toJson(data,BluetoothPictureInfo.class);
-            Log.d(TAG,"origin fileName: "+data.getFileName());
+            Log.d(TAG,"origin fileName: "+data.getFileName() + " Thread: " + Thread.currentThread());
             Log.d(TAG,"json fileName : "+ json.substring(0,100));
             gson.toJson(data, BluetoothPictureInfo.class, writer);
             writer.flush();
@@ -157,23 +185,32 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
 
     @Override
     public void clear() {
-        try{
-            isConnected = false;
-            if(mSocket.isConnected())
-                mSocket.close();
-
+        isConnected = false;
+        try {
+            writer.close();
+            connectThread.interrupt();
+            connectThread.cancel();
+            connectThread = null;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        isConnected = false;
-        if(mSocket.isConnected())
-            try {
-                if(mSocket.isConnected())
-                    mSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+
+
         mSocket = null;
+    }
+    public void notifySocketConnected(){
+        Intent intent = new Intent();
+        intent.setAction(onSocketConnected);
+        context.sendBroadcast(intent);
+    }
+
+    public void notifySocketDisConnected(){
+        if(context == null){
+            Log.d(TAG,"notifySocketDisConnected context : "+context);
+        }
+        Intent intent = new Intent();
+        intent.setAction(onSocketDisConnected);
+        context.sendBroadcast(intent);
     }
 
     private class ConnectThread extends Thread {
@@ -202,17 +239,16 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
         public void run() {
             // Cancel discovery because it will slow down the connection
             //mBluetoothAdapter.cancelDiscovery();
-            retryCount = 3;
-            while(retryCount > 0) {
+            //retryCount = 3;
+            while(!isInterrupted()) {
                 try {
-                    Log.d(TAG, "run connectThread ");
+                    Log.d(TAG, "run connectThread :"+mmSocket);
                     if (mmSocket.isConnected()) {
                         Log.d(TAG, "mmSocket is already connected");
                         return;
                     }
                     // Connect the device through the socket. This will block
                     // until it succeeds or throws an exception
-
                     mmSocket.connect();
                     isConnected = true;
                     // Do work to manage the connection (in a separate thread)
@@ -227,19 +263,20 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
                     }
                     Log.d(TAG, "BluetoothConnection success to get stream " + mSocket.isConnected() );
                     notifySocketConnected();
-                    break;
+                    return ;
 
                 } catch (IOException connectException) {
                     // Unable to connect; close the socket and get out
                     Log.e(TAG, "IOException : Unable to connect to device");
                     connectException.printStackTrace();
-                    retryCount--;
+                    //retryCount--;
                     cancel();
                     return;
                 } catch (Exception e) {
-                    retryCount--;
+                    //retryCount--;
                     Log.e(TAG, "unable to get stream");
                     Log.e(TAG, e.getMessage());
+                    return ;
                 }
             }
 
@@ -252,15 +289,10 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
                 isConnected = false;
                 if(mmSocket.isConnected())
                     mmSocket.close();
+                connectThread = null;
             } catch (IOException e) {
                 Log.e(TAG, "[cancel()] Failed to close socket.");
             }
-        }
-
-        public void notifySocketConnected(){
-            Intent intent = new Intent();
-            intent.setAction(onSocketConnected);
-            context.sendBroadcast(intent);
         }
     }
 }

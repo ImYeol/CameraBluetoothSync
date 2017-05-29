@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 
 import com.ragnarok.rxcamera.RxCamera;
 import com.ragnarok.rxcamera.config.RxCameraConfig;
@@ -21,6 +22,7 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 import thealphalabs.defaultcamera.R;
 import thealphalabs.defaultcamera.data.AppDataManager;
 import thealphalabs.defaultcamera.databinding.ActivityMainCameraViewBinding;
@@ -53,6 +55,8 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG,"onCreate");
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setUp();
         bindAndAttach();
     }
@@ -74,6 +78,13 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     @Override
     public void showLoading() {
         super.showLoading();
+        //camera.getNativeCamera().stopPreview();
+    }
+
+    @Override
+    public void hideLoading() {
+        super.hideLoading();
+        camera.getNativeCamera().startPreview();
     }
 
     private boolean checkPermission() {
@@ -112,30 +123,37 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     @Override
     protected void onResume() {
         super.onResume();
-        addSplashView();
+        Log.d(TAG,"onResume : "+ checkCamera() + " textureView: " + binding.preview.isAvailable() + " isOpaque: " +binding.preview.isOpaque());
+
+       // addSplashView();
         /*Log.d(TAG,"onResume : "+ checkCamera());
         if( !mPresenter.isBinded() ){
             mPresenter.registerConnectedReceiver(this);
             //bindBluetoothService();
         }*/
-        startPreview();
-       /* if(!checkCamera()){
+
+       // startPreview();
+        if(!checkCamera()){
             //closeCamera();
             openCamera();
 
-        }*/
+        }
+
+       mPresenter.registerDisConnectedReceiver(this);
     }
 
     private void startPreview(){
         if(mPresenter.isBinded() && mPresenter.checkServerConnected()){
             Log.d(TAG,"onResume - openCameraAcitivity");
-            removeSplashView();
+
+            //removeSplashView();
             if(!checkCamera()){
                 //closeCamera();
                 openCamera();
             }
         } else {
             Log.d(TAG,"onResume - register receiver : "+mPresenter.isBinded() + " " + mPresenter.checkServerConnected());
+            addSplashView();
             mPresenter.registerConnectedReceiver(this);
         }
     }
@@ -152,8 +170,10 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
                 .useBackCamera()
                 .setAutoFocus(true)
                 .setPreferPreviewFrameRate(15, 30)
+                //.setPreferPreviewSize(new Point(1280,720),false)
                 .setPreferPreviewSize(new Point(640, 480), false)
                 .setHandleSurfaceEvent(true)
+                .setMuteShutterSound(true)
                 .build();
         Log.d(TAG, "config: " + config);
         RxCamera.open(this, config).flatMap(new Func1<RxCamera, Observable<RxCamera>>() {
@@ -169,7 +189,7 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
                 showLog("isbindsurface: " + rxCamera.isBindSurface() + ", thread: " + Thread.currentThread());
                 return rxCamera.startPreview();
             }
-        }).observeOn(AndroidSchedulers.mainThread()).subscribe(new Subscriber<RxCamera>() {
+        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.computation()).subscribe(new Subscriber<RxCamera>() {
             @Override
             public void onCompleted() {
 
@@ -213,16 +233,22 @@ public class MainCameraView extends BaseActivity implements MainCameraMvpView {
     protected void onPause() {
         super.onPause();
         Log.d(TAG,"onPause : " +checkCamera());
+
         if(checkCamera()) {
             closeCamera();
         }
+        mPresenter.unRegisterDisConnectedReceiver(this);
+        finish();
+        //hideLoading();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG,"onDestroy");
-        CameraApp.get(this).getDataManager().unBindBluetoothService(this);
+        //CameraApp.get(this).getDataManager().unBindBluetoothService(getApplicationContext());
+        mPresenter.onDetach();
+        AppDataManager.getInstance().unBindBluetoothService(getApplicationContext());
         /*if (camera != null) {
             camera.closeCamera();
         }*/

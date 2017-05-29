@@ -21,20 +21,24 @@ public class AppDataManager implements DataManager {
     private BluetoothClientService mBluetoothService;
     private boolean isServiceOn = false;
     private BluetoothClientService.btBinder binder;
+    private ServiceConnection mConn ;
 
-    private ServiceConnection mConn = new ServiceConnection() {
+/*    private ServiceConnection mConn = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             BluetoothClientService.btBinder binder = (BluetoothClientService.btBinder)service;
             mBluetoothService = binder.getService();
             isServiceOn = true;
+            Log.d(TAG,"onServiceConnected");
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            Log.d(TAG,"onServiceDisconnected");
             isServiceOn = false;
+            mBluetoothService = null;
         }
-    };
+    };*/
 
     public static AppDataManager getInstance(){
         if(instance == null){
@@ -49,22 +53,49 @@ public class AppDataManager implements DataManager {
 
     @Override
     public void bindToBluetoothService(Context context){
-        Intent intent = new Intent(context, BluetoothClientService.class);
-        context.bindService(intent,mConn,Context.BIND_AUTO_CREATE);
-        Log.d(TAG,"bindToBluetoothService");
+        if(!isServiceOn) {
+            if(mConn == null){
+                mConn = new ServiceConnection() {
+                    @Override
+                    public void onServiceConnected(ComponentName name, IBinder service) {
+                        BluetoothClientService.btBinder binder = (BluetoothClientService.btBinder)service;
+                        mBluetoothService = binder.getService();
+                        isServiceOn = true;
+                        Log.d(TAG,"onServiceConnected");
+                    }
+
+                    @Override
+                    public void onServiceDisconnected(ComponentName name) {
+                        Log.d(TAG,"onServiceDisconnected");
+                        isServiceOn = false;
+                        mBluetoothService = null;
+                    }
+                };
+            }
+            Log.d(TAG, "bindToBluetoothService conn: "+mConn);
+            Intent intent = new Intent(context, BluetoothClientService.class);
+            context.bindService(intent, mConn, Context.BIND_AUTO_CREATE);
+        }
     }
 
     @Override
     public void unBindBluetoothService(Context context) {
-        Intent intent = new Intent(context, BluetoothClientService.class);
-        context.unbindService(mConn);
-        context.stopService(intent);
+        if(isServiceOn) {
+            //Intent intent = new Intent(context, BluetoothClientService.class);
+            context.unbindService(mConn);
+            //context.stopService(intent);
+            mConn = null;
+            isServiceOn = false;
+            Log.d(TAG, "unBindToBluetoothService");
+        }
     }
 
     @Override
     public boolean sendImageData(BluetoothPictureInfo picture) {
-        if(mBluetoothService == null)
-            Log.d(TAG,"mBluetoothService is null");
+        if(mBluetoothService == null) {
+            Log.d(TAG, "mBluetoothService is null");
+            return false;
+        }
         return mBluetoothService.sendImageData(picture);
     }
 

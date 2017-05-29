@@ -18,12 +18,17 @@ public class MainSplashPresenter<V extends MainSplashMvpView> extends BasePresen
     public void onAttach(V mvpView) {
         super.onAttach(mvpView);
 
-        if( ! isBinded() ){
+        /*if( ! isBinded() ){
             getMvpView().bindBluetoothService();
-        }
+        }*/
 
     }
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+    }
 
     @Override
     public boolean checkServerConnected() {
