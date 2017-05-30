@@ -16,6 +16,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.stream.JsonWriter;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -147,17 +148,16 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
     public void sendPictureToService(BluetoothPictureInfo data) {
         //writer.setIndent("  ");
         try {
-           // writer.beginObject();
-            //data.setRawImageData("nice");
-            GsonBuilder builder = new GsonBuilder().excludeFieldsWithoutExposeAnnotation();
+
+           /* GsonBuilder builder = new GsonBuilder().excludeFieldsWithoutExposeAnnotation();
             final Gson gson = builder.create();
             String json = gson.toJson(data,BluetoothPictureInfo.class);
             Log.d(TAG,"origin fileName: "+data.getFileName() + " Thread: " + Thread.currentThread());
             Log.d(TAG,"json fileName : "+ json.substring(0,100));
             gson.toJson(data, BluetoothPictureInfo.class, writer);
-            writer.flush();
-           // writer.endObject();
-           // writer.close();
+            writer.flush();*/
+           sendData(data);
+
         }  catch (JsonIOException e){
             Log.d(TAG," json IO exception");
             e.printStackTrace();
@@ -166,6 +166,16 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
             Log.d(TAG," IO Exception on sendPictureToServer");
             e.printStackTrace();
         }
+
+    }
+
+    private void sendData(BluetoothPictureInfo data) throws IOException{
+        DataOutputStream out = new DataOutputStream(outputStream);
+
+            out.writeUTF(data.getFileName());
+            out.writeInt(data.getRawImageData().length);
+            out.write(data.getRawImageData(),0,data.getRawImageData().length);
+
 
     }
 
@@ -186,15 +196,17 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
     @Override
     public void clear() {
         isConnected = false;
-        try {
+       /* try {
             writer.close();
             connectThread.interrupt();
             connectThread.cancel();
             connectThread = null;
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
+        }*/
+        connectThread.interrupt();
+        connectThread.cancel();
+        connectThread = null;
 
         mSocket = null;
     }
@@ -255,12 +267,12 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
                     //mBluetoothConnection = new BluetoothConnection(mSocket);
                     outputStream = mSocket.getOutputStream();
                     inputStream = mSocket.getInputStream();
-                    try {
+                    /*try {
                         writer = new JsonWriter(new OutputStreamWriter(outputStream, "UTF-8"));
                     } catch (UnsupportedEncodingException e) {
                         Log.d(TAG, "unSupported Encoding Exception");
                         e.printStackTrace();
-                    }
+                    }*/
                     Log.d(TAG, "BluetoothConnection success to get stream " + mSocket.isConnected() );
                     notifySocketConnected();
                     return ;

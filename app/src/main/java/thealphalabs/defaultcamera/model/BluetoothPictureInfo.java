@@ -17,7 +17,7 @@ public class BluetoothPictureInfo {
 
     @Expose
     @SerializedName("rawImageData")
-    private String rawImageData;
+    private byte[] rawImageData;
 
     public BluetoothPictureInfo(){
 
@@ -41,15 +41,16 @@ public class BluetoothPictureInfo {
     }
 
     public void setRawImageData(byte[] imageData){
-        this.rawImageData = Base64.encodeToString(imageData, Base64.DEFAULT);
+        //this.rawImageData = Base64.encodeToString(imageData, Base64.DEFAULT);
+        this.rawImageData = imageData;
     }
 
-    public String getRawImageData(){
+    public byte[] getRawImageData(){
         return this.rawImageData;
     }
 
     public void setRawImageData(String imageData){
-        this.rawImageData = imageData;
+        //this.rawImageData = imageData;
     }
 
     public void clear(){
