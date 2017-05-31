@@ -11,6 +11,7 @@ import android.os.ParcelUuid;
 import android.util.Log;
 
 import com.github.ivbaranov.rxbluetooth.BluetoothConnection;
+import com.google.flatbuffers.FlatBufferBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.stream.JsonWriter;
 
@@ -20,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import thealphalabs.defaultcamera.model.BluetoothPictureInfo;
+import thealphalabs.defaultcamera.model.BtPictureInfo;
 
 import static thealphalabs.defaultcamera.service.BluetoothClientService.TAG;
 
@@ -152,7 +154,8 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
             Log.d(TAG,"json fileName : "+ json.substring(0,100));
             gson.toJson(data, BluetoothPictureInfo.class, writer);
             writer.flush();*/
-           sendData(data);
+           //sendData(data);
+            sendFlatbuffer(data);
 
         }  catch (JsonIOException e){
             Log.d(TAG," json IO exception");
@@ -162,6 +165,28 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
             Log.d(TAG," IO Exception on sendPictureToServer");
             e.printStackTrace();
         }
+
+    }
+
+    private void sendFlatbuffer(BluetoothPictureInfo data) throws IOException {
+        FlatBufferBuilder fbb = new FlatBufferBuilder(1024);
+
+        int name = fbb.createString(data.getFileName());
+        int image = BtPictureInfo.createRawImageDataVector(fbb,data.getRawImageData());
+
+        BtPictureInfo.startBtPictureInfo(fbb);
+        BtPictureInfo.addFileName(fbb,name);
+        BtPictureInfo.addRawImageData(fbb,image);
+        int end = BtPictureInfo.endBtPictureInfo(fbb);
+        fbb.finish(end);
+
+        // Do not write in text mode but binary mode
+
+        byte[] flatData = fbb.sizedByteArray();
+
+        DataOutputStream out = new DataOutputStream(outputStream);
+        out.write(flatData.length);
+        out.write(flatData);
 
     }
 
