@@ -11,8 +11,6 @@ import android.os.ParcelUuid;
 import android.util.Log;
 
 import com.github.ivbaranov.rxbluetooth.BluetoothConnection;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.stream.JsonWriter;
 
@@ -20,8 +18,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 
 import thealphalabs.defaultcamera.model.BluetoothPictureInfo;
 
@@ -175,8 +171,6 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
             out.writeUTF(data.getFileName());
             out.writeInt(data.getRawImageData().length);
             out.write(data.getRawImageData(),0,data.getRawImageData().length);
-
-
     }
 
     @Override
