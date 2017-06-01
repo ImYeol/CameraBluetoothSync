@@ -185,8 +185,10 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
         byte[] flatData = fbb.sizedByteArray();
 
         DataOutputStream out = new DataOutputStream(outputStream);
-        out.write(flatData.length);
+        out.writeInt(flatData.length);
         out.write(flatData);
+        //out.flush();
+        Log.d(TAG,"sendFlatBuffer : byte size: " + data.getRawImageData().length + "flat size: "+ flatData.length);
 
     }
 
@@ -196,6 +198,7 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
             out.writeUTF(data.getFileName());
             out.writeInt(data.getRawImageData().length);
             out.write(data.getRawImageData(),0,data.getRawImageData().length);
+            out.flush();
     }
 
     @Override
@@ -223,9 +226,11 @@ public class BluetoothConnectionHelper implements ConnectionHelper {
         } catch (IOException e) {
             e.printStackTrace();
         }*/
-        connectThread.interrupt();
-        connectThread.cancel();
-        connectThread = null;
+       if(connectThread != null) {
+           connectThread.interrupt();
+           connectThread.cancel();
+           connectThread = null;
+       }
 
         mSocket = null;
     }
